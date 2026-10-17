@@ -27,6 +27,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:16px}
 h1{font-family:var(--f-display);font-weight:400;font-size:clamp(24px,3vw,32px);margin:0;letter-spacing:.02em;text-wrap:balance}
 header p{margin:0;color:var(--muted)}
+.guide-link{margin-left:auto;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:700;font-size:14px;padding:7px 16px;border-radius:99px;white-space:nowrap}
+.guide-link:hover{filter:brightness(1.08)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:20px;align-items:start}
 @media (max-width:1080px){.grid{grid-template-columns:minmax(0,1fr)}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;min-width:0}
@@ -139,6 +141,7 @@ kbd{font-family:inherit;font-size:12.5px;border:1px solid var(--line);border-bot
   <header>
     <h1>楠小宣導動畫工作室</h1>
     <p>選範本、改文字，一分鐘的宣導動畫就完成：多種動畫特效、配樂音效、可挑選的旁白聲音。</p>
+    <a class="guide-link" href="https://ntpsbing.github.io/promo-anim/guide/" target="_blank" rel="noopener">使用教學（圖解）</a>
   </header>
 
   <div class="grid">
@@ -414,10 +417,21 @@ function wrap(text,maxW){
   }
   return out;
 }
+/* 排字：先試一行放得下（稍微縮小字），放不下才換行；換行時在空格或中間斷開，避免最後一行只剩一個字 */
 function fit(text,fontFn,big,small,maxW,maxLines){
-  let sz=big,lines;
-  for(;sz>=small;sz-=4){ctx.font=fontFn(sz);lines=wrap(text,maxW);if(lines.length<=maxLines)return{size:sz,lines}}
+  text=String(text||'');let sz=big,lines;
+  if(maxLines>1&&!text.includes('\n')){for(sz=big;sz>=Math.max(small,big*.72);sz-=4){ctx.font=fontFn(sz);if(ctx.measureText(text).width<=maxW)return{size:sz,lines:[text]}}}
+  for(sz=big;sz>=small;sz-=4){ctx.font=fontFn(sz);lines=wrap(text,maxW);if(lines.length<=maxLines)return{size:sz,lines:balance(text,lines,maxW)}}
   ctx.font=fontFn(small);return{size:small,lines:wrap(text,maxW).slice(0,maxLines)};
+}
+function balance(text,lines,maxW){
+  if(lines.length!==2||text.includes('\n'))return lines;
+  const sp=[...text.matchAll(/\s+/g)].map(m=>m.index);const mid=text.length/2;
+  sp.sort((a,b)=>Math.abs(a-mid)-Math.abs(b-mid));
+  for(const k of sp){const a=text.slice(0,k).trim(),b=text.slice(k).trim();if(a&&b&&ctx.measureText(a).width<=maxW&&ctx.measureText(b).width<=maxW&&Math.min(a.length,b.length)>=2)return[a,b]}
+  const tw=ctx.measureText(text).width;let lo=tw/2,best=lines;
+  for(let w=lo;w<=maxW;w+=Math.max(8,tw*.03)){const l=wrap(text,w);if(l.length===2){best=l;break}}
+  return Array.from(best[best.length-1]).length<2?lines:best;
 }
 function linesAt(lines,x,yMid,lh,align,count){ctx.textAlign=align||'center';ctx.textBaseline='middle';const n=count||lines.length;const y0=yMid-(n-1)*lh/2;lines.forEach((l,i)=>ctx.fillText(l,x,y0+i*lh))}
 function maxW(lines){return Math.max(0,...lines.map(l=>ctx.measureText(l).width))}

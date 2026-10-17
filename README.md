@@ -4,6 +4,8 @@
 
 **線上使用：** https://ntpsbing.github.io/promo-anim/
 
+**圖解教學：** https://ntpsbing.github.io/promo-anim/guide/
+
 ## 老師怎麼用
 1. 用電腦的 Edge 或 Chrome 打開上面的網址。
 2. 「範本」選一個主題，舞台下方選觀眾風格。
